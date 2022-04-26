@@ -3,12 +3,14 @@ import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 public class Player extends JFrame {
     private int width;
     private int height;
     private Container contentPane;
     private JTextArea message;
+    private ArrayList<JButton> hand = new ArrayList<>();
     private JButton b1;
     private JButton b2;
     private JButton b3;
@@ -32,13 +34,16 @@ public class Player extends JFrame {
         height = h;
         contentPane = this.getContentPane();
         message = new JTextArea();
+        for (int i = 0; i < 7; ++i) {
+            hand.add(new JButton(String.format("%d", i + 1)));
+        }
         b1 = new JButton("1");
         b2 = new JButton("2");
         b3 = new JButton("3");
         b4 = new JButton("4");
-        // b5 = new JButton("5");
-        // b6 = new JButton("6");
-        // b7 = new JButton("7");
+        b5 = new JButton("5");
+        b6 = new JButton("6");
+        b7 = new JButton("7");
         values = new int[4];
         maxTurns = 0;
         turnsMade = 0;
@@ -50,16 +55,19 @@ public class Player extends JFrame {
         this.setSize(width, height);
         this.setTitle("Player #" + playerId);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        contentPane.setLayout(new GridLayout(1, 5));
+        contentPane.setLayout(new GridLayout(1, 8));
         contentPane.add(message);
         message.setText("UNO game in Java using ServerClient");
         message.setWrapStyleWord(true);
         message.setLineWrap(true);
         message.setEditable(false);
-        contentPane.add(b1);
-        contentPane.add(b2);
-        contentPane.add(b3);
-        contentPane.add(b4);
+        for (JButton jButton : hand) {
+            contentPane.add(jButton);
+        }
+        // contentPane.add(b1);
+        // contentPane.add(b2);
+        // contentPane.add(b3);
+        // contentPane.add(b4);
         // contentPane.add(b5);
         // contentPane.add(b6);
         // contentPane.add(b7);
@@ -86,36 +94,37 @@ public class Player extends JFrame {
     }
 
     public void setupButtons() {
-        ActionListener al = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JButton b = (JButton) e.getSource();
-                int bNum = Integer.parseInt(b.getText());
+        ActionListener al = e -> {
+            JButton b = (JButton) e.getSource();
+            int bNum = Integer.parseInt(b.getText());
 
-                message.setText("You clicked button #" + bNum + ". Now wait for player #" + otherPlayer);
-                ++turnsMade;
-                System.out.println("Turns made: " + turnsMade);
+            message.setText("You clicked button #" + bNum + ". Now wait for player #" + otherPlayer);
+            ++turnsMade;
+            System.out.println("Turns made: " + turnsMade);
 
-                buttonsEnabled = false;
-                toggleButtons();
+            buttonsEnabled = false;
+            toggleButtons();
 
-                myPoints += values[bNum - 1];
-                System.out.println("My points: " + myPoints);
+            myPoints += values[bNum - 1];
+            System.out.println("My points: " + myPoints);
 
-                csc.sendButtonNum(bNum);
-                if (playerId == 2 && turnsMade == maxTurns) {
-                    checkWinner();
-                } else {
-                    Thread t = new Thread(() -> updateTurn());
-                    t.start();
-                }
+            csc.sendButtonNum(bNum);
+            if (playerId == 2 && turnsMade == maxTurns) {
+                checkWinner();
+            } else {
+                Thread t = new Thread(() -> updateTurn());
+                t.start();
             }
         };
 
-        b1.addActionListener(al);
-        b2.addActionListener(al);
-        b3.addActionListener(al);
-        b4.addActionListener(al);
+        for (JButton jButton : hand) {
+            jButton.addActionListener(al);
+        }
+
+        // b1.addActionListener(al);
+        // b2.addActionListener(al);
+        // b3.addActionListener(al);
+        // b4.addActionListener(al);
     }
 
     public void toggleButtons() {
@@ -203,7 +212,7 @@ public class Player extends JFrame {
         public void closeConnection() {
             try {
                 s.close();
-                System.out.println("---- CONNECTIN CLOSED ----");
+                System.out.println("---- CONNECTION CLOSED ----");
             } catch (IOException ex) {
                 System.out.println("IOException on closeConnection() csc");
             }
@@ -211,7 +220,7 @@ public class Player extends JFrame {
     }
 
     public static void main(String[] args) {
-        Player p = new Player(500, 150);
+        Player p = new Player(500, 125);
         p.connectToServer();
         p.setupGUI();
         p.setupButtons();
