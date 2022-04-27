@@ -116,9 +116,15 @@ public class Player extends JFrame {
         if (playerId == 1 && turnsMade == maxTurns) {
             checkWinner();
         } else {
-            buttonsEnabled = true;
+            List<Card> playableCards = getPlayableCards(c);
+            List<JButton> buttonsToEnable = new ArrayList<>();
+            for (Card card : playableCards) {
+                buttonsToEnable.addAll(buttons.stream().filter(b -> b.getText().equals(card.print())).toList());
+            }
+            for (JButton button : buttonsToEnable) {
+                button.setEnabled(true);
+            }
         }
-        toggleButtons();
     }
 
     private void checkWinner() {
