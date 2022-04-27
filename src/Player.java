@@ -82,19 +82,16 @@ public class Player extends JFrame {
     public void setupButtons() {
         ActionListener al = e -> {
             JButton b = (JButton) e.getSource();
-            int bNum = Integer.parseInt(b.getText());
+            String card = b.getText();
 
-            message.setText("You clicked button #" + bNum + ". Now wait for player #" + otherPlayer);
+            message.setText("You played " + card + ". Now wait for player #" + otherPlayer);
             ++turnsMade;
             System.out.println("Turns made: " + turnsMade);
 
             buttonsEnabled = false;
             toggleButtons();
 
-            //myPoints += values.get(bNum - 1);
-            //System.out.println("My points: " + myPoints);
-
-            csc.sendCard("some card");
+            csc.sendCard(card);
             if (playerId == 2 && turnsMade == maxTurns) {
                 checkWinner();
             } else {
@@ -117,8 +114,6 @@ public class Player extends JFrame {
     public void updateTurn() {
         String s = csc.receiveCard();
         message.setText("Your enemy played " + s + ". Your turn.");
-        //enemyPoints += values.get(n -1);
-        //System.out.println("Your enemy has " + enemyPoints + " points.");
         if (playerId == 1 && turnsMade == maxTurns) {
             checkWinner();
         } else {
@@ -168,6 +163,9 @@ public class Player extends JFrame {
                 System.out.println("Value #5 is " + values.get(4));
                 System.out.println("Value #6 is " + values.get(5));
                 System.out.println("Value #7 is " + values.get(6));
+                for (int i = 0; i < 7; ++i) {
+                    hand.set(i, new JButton(values.get(i)));
+                }
             } catch (IOException ex) {
                 System.out.println("IOException from CSC constructor.");
             }
