@@ -92,6 +92,9 @@ public class Player extends JFrame {
             toggleButtons();
 
             csc.sendCard(card);
+            contentPane.remove(b);
+            contentPane.revalidate();
+            contentPane.repaint();
             if (playerId == 2 && turnsMade == maxTurns) {
                 checkWinner();
             } else {
@@ -202,7 +205,7 @@ public class Player extends JFrame {
     }
 
     public static void main(String[] args) {
-        Player p = new Player(500, 125);
+        Player p = new Player(800, 125);
         p.connectToServer();
         p.setupGUI();
         p.setupButtons();
