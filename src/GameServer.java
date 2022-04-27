@@ -88,10 +88,18 @@ public class GameServer {
                 while (true) {
                     if (playerId == 1) {
                         player1Card = dis.readUTF();
+                        if (player1Card.equals("DRAW")) {
+                            player1.sendCard(deck.pop().print());
+                            continue;
+                        }
                         System.out.println("Player 1 played " + player1Card);
                         player2.sendCard(player1Card);
                     } else {
                         player2Card = dis.readUTF();
+                        if (player2Card.equals("DRAW")) {
+                            player2.sendCard(deck.pop().print());
+                            continue;
+                        }
                         System.out.println("Player 2 played " + player2Card);
                         player1.sendCard(player2Card);
                     }

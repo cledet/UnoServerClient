@@ -29,7 +29,7 @@ public class Player extends JFrame {
         height = h;
         contentPane = this.getContentPane();
         message = new JTextArea();
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < 8; ++i) {
             buttons.add(new JButton(String.format("%d", i + 1)));
         }
         values = new ArrayList<>();
@@ -79,29 +79,52 @@ public class Player extends JFrame {
             JButton b = (JButton) e.getSource();
             String cardString = b.getText();
 
-            message.setText("You played " + cardString + ". Now wait for player #" + otherPlayer);
-            ++turnsMade;
-            System.out.println("Turns made: " + turnsMade);
-
-            buttonsEnabled = false;
-            toggleButtons();
-
-            csc.sendCard(cardString);
-            contentPane.remove(b);
-            contentPane.revalidate();
-            contentPane.repaint();
-            hand.remove(hand.stream().filter(x -> x.print().equals(cardString)).findFirst().get());
-            if (playerId == 2 && turnsMade == maxTurns) {
-                checkWinner();
+            if (cardString.equals("DRAW")) {
+                Card holdCard = csc.receivedCard;
+                do {
+                    csc.sendCard(b.getText());
+                    Card card = csc.receiveCard();
+                    hand.add(card);
+                    JButton jButton = new JButton(card.print());
+                    if (getPlayableCards(holdCard).size() == 0)
+                    {
+                        jButton.setEnabled(false);
+                    }
+                    buttons.add(jButton);
+                    contentPane.add(jButton);
+                    contentPane.validate();
+                    contentPane.repaint();
+                } while (getPlayableCards(holdCard).size() == 0);
+                addActionListener();
             } else {
-                Thread t = new Thread(() -> updateTurn());
-                t.start();
+                message.setText("You played " + cardString + ". Now wait for player #" + otherPlayer);
+                ++turnsMade;
+                System.out.println("Turns made: " + turnsMade);
+
+                buttonsEnabled = false;
+                toggleButtons();
+
+                csc.sendCard(cardString);
+                contentPane.remove(b);
+                contentPane.revalidate();
+                contentPane.repaint();
+                hand.remove(hand.stream().filter(x -> x.print().equals(cardString)).findFirst().get());
+                if (playerId == 2 && turnsMade == maxTurns) {
+                    checkWinner();
+                } else {
+                    Thread t = new Thread(() -> updateTurn());
+                    t.start();
+                }
             }
         };
 
         for (JButton jButton : buttons) {
             jButton.addActionListener(al);
         }
+    }
+
+    private void addActionListener() {
+        setupButtons();
     }
 
     public void toggleButtons() {
@@ -117,12 +140,16 @@ public class Player extends JFrame {
             checkWinner();
         } else {
             List<Card> playableCards = getPlayableCards(c);
-            List<JButton> buttonsToEnable = new ArrayList<>();
-            for (Card card : playableCards) {
-                buttonsToEnable.addAll(buttons.stream().filter(b -> b.getText().equals(card.print())).toList());
-            }
-            for (JButton button : buttonsToEnable) {
-                button.setEnabled(true);
+            if (playableCards.size() == 0) {
+                buttons.get(0).setEnabled(true);
+            } else {
+                List<JButton> buttonsToEnable = new ArrayList<>();
+                for (Card card : playableCards) {
+                    buttonsToEnable.addAll(buttons.stream().filter(b -> b.getText().equals(card.print())).toList());
+                }
+                for (JButton button : buttonsToEnable) {
+                    button.setEnabled(true);
+                }
             }
         }
     }
@@ -224,6 +251,7 @@ public class Player extends JFrame {
         private Socket s;
         private DataInputStream dis;
         private DataOutputStream dos;
+        public Card receivedCard;
 
         public ClientSideConnection() {
             System.out.println("---- Client ----");
@@ -247,8 +275,9 @@ public class Player extends JFrame {
                 System.out.println("Value #5 is " + hand.get(4).print());
                 System.out.println("Value #6 is " + hand.get(5).print());
                 System.out.println("Value #7 is " + hand.get(6).print());
+                buttons.set(0, new JButton("DRAW"));
                 for (int i = 0; i < 7; ++i) {
-                    buttons.set(i, new JButton(hand.get(i).print()));
+                    buttons.set(i + 1, new JButton(hand.get(i).print()));
                 }
             } catch (IOException ex) {
                 System.out.println("IOException from CSC constructor.");
@@ -273,6 +302,7 @@ public class Player extends JFrame {
             } catch (IOException ex) {
                 System.out.println("IOException from receiveButtonNum() csc");
             }
+            receivedCard = c;
             return c;
         }
 
