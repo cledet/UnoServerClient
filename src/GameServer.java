@@ -86,11 +86,15 @@ public class GameServer {
                 dos.flush();
 
                 while (true) {
+                    Thread.sleep(2000);
                     if (playerId == 1) {
                         player1Card = dis.readUTF();
                         if (player1Card.equals("DRAW")) {
                             player1.sendCard(deck.pop().print());
                             continue;
+                        } else if (player1Card.equals("WINNER")) {
+                            player2.sendCard("LOSER");
+                            break;
                         }
                         System.out.println("Player 1 played " + player1Card);
                         player2.sendCard(player1Card);
@@ -99,6 +103,9 @@ public class GameServer {
                         if (player2Card.equals("DRAW")) {
                             player2.sendCard(deck.pop().print());
                             continue;
+                        } else if (player2Card.equals("WINNER")) {
+                            player1.sendCard("LOSER");
+                            break;
                         }
                         System.out.println("Player 2 played " + player2Card);
                         player1.sendCard(player2Card);
@@ -111,7 +118,7 @@ public class GameServer {
                 }
                 player1.closeConnection();
                 player2.closeConnection();
-            } catch (IOException ex) {
+            } catch (IOException | InterruptedException ex) {
                 System.out.println("IOException in SSC.run()");
             }
         }

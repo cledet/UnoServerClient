@@ -108,9 +108,18 @@ public class Player extends JFrame {
                 contentPane.remove(b);
                 contentPane.revalidate();
                 contentPane.repaint();
-                hand.remove(hand.stream().filter(x -> x.print().equals(cardString)).findFirst().get());
-                if (playerId == 2 && turnsMade == maxTurns) {
-                    checkWinner();
+                try {
+                    hand.remove(hand.stream().filter(x -> x.print().equals(cardString)).findFirst().get());
+                } catch (Exception ex){
+                    System.out.println("Card String = " + cardString);
+                    for (int i = 0; i < hand.size(); ++i) {
+                        System.out.println("#" + i + ": " + hand.get(i).print());
+                    }
+                }
+                if (hand.size() == 0) {
+                    message.setText("YOU WIN!!");
+                    csc.sendCard("WINNER");
+                    csc.closeConnection();
                 } else {
                     Thread t = new Thread(() -> updateTurn());
                     t.start();
@@ -135,10 +144,16 @@ public class Player extends JFrame {
 
     public void updateTurn() {
         Card c = csc.receiveCard();
-        message.setText("Your enemy played " + c.print() + ". Your turn.");
-        if (playerId == 1 && turnsMade == maxTurns) {
-            checkWinner();
-        } else {
+        if (hand.size() == 0) {
+            message.setText("YOU WIN!!");
+            csc.sendCard("WINNER");
+            csc.closeConnection();
+        } else if (c.equals("LOSER")) {
+            message.setText("YOU LOSE!!");
+            csc.closeConnection();
+        }
+        else {
+            message.setText("Your enemy played " + c.print() + ". Your turn.");
             List<Card> playableCards = getPlayableCards(c);
             if (playableCards.size() == 0) {
                 buttons.get(0).setEnabled(true);
@@ -152,19 +167,6 @@ public class Player extends JFrame {
                 }
             }
         }
-    }
-
-    private void checkWinner() {
-        buttonsEnabled = false;
-        if (myPoints > enemyPoints) {
-            message.setText("You WON!\n" + "YOU: " + myPoints + "\nENEMY" + enemyPoints);
-        } else if (myPoints < enemyPoints) {
-            message.setText("You LOSE!\n" + "YOU: " + myPoints + "\nENEMY" + enemyPoints);
-        } else {
-            message.setText("It's a TIE!\n" + "You both got: " + myPoints + " points.");
-        }
-
-        csc.closeConnection();
     }
 
     public List<Card> getPlayableCards (Card card) {
