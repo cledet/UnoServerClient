@@ -21,7 +21,12 @@ public class Card {
     }
 
     public String print() {
-        return String.format("%s %s", color, value);
+        if (value == CardValue.EMPTY)
+        {
+            return String.format("%s", color);
+        } else {
+            return String.format("%s %s", color, value);
+        }
     }
 }
 
