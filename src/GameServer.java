@@ -11,22 +11,19 @@ public class GameServer {
     private ServerSideConnection player2;
     private int turnsMade;
     private int maxTurns;
-    private int[] values;
-    private int player1ButtonNum;
-    private int player2ButtonNum;
+    private ArrayList<String> values;
+    private String player1Card;
+    private String player2Card;
     public static Stack<Card> deck = new Stack<>();
 
     public GameServer() {
         System.out.println("---- GAME SERVER ----");
         numPlayers = 0;
         turnsMade = 0;
-        maxTurns = 6;
-        values = new int[4];
+        maxTurns = 60;
+        values = new ArrayList<>();
 
-        for (int i = 0; i < values.length; i++) {
-            values[i] = (int) Math.ceil(Math.random() * 100);
-            System.out.println("Value #" + (i + 1) + " is " + values[i]);
-        }
+        initDeck();
 
         try {
             ss = new ServerSocket(5000);
@@ -79,22 +76,24 @@ public class GameServer {
         public void run() {
             try {
                 dos.writeInt(playerId);
-                dos.writeInt(maxTurns);
-                dos.writeInt(values[0]);
-                dos.writeInt(values[1]);
-                dos.writeInt(values[2]);
-                dos.writeInt(values[3]);
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
+                dos.writeUTF(deck.pop().print());
                 dos.flush();
 
                 while (true) {
                     if (playerId == 1) {
-                        player1ButtonNum = dis.readInt();
-                        System.out.println("Player 1 clicked button #" + player1ButtonNum);
-                        player2.sendButtonNum(player1ButtonNum);
+                        player1Card = dis.readUTF();
+                        System.out.println("Player 1 played " + player1Card);
+                        player2.sendCard(player1Card);
                     } else {
-                        player2ButtonNum = dis.readInt();
-                        System.out.println("Player 2 clicked button #" + player2ButtonNum);
-                        player1.sendButtonNum(player2ButtonNum);
+                        player2Card = dis.readUTF();
+                        System.out.println("Player 2 played " + player2Card);
+                        player1.sendCard(player2Card);
                     }
                     ++turnsMade;
                     if (turnsMade == maxTurns) {
@@ -109,9 +108,9 @@ public class GameServer {
             }
         }
 
-        public void sendButtonNum(int n) {
+        public void sendCard(String s) {
             try {
-                dos.writeInt(n);
+                dos.writeUTF(s);
                 dos.flush();
             } catch (IOException ex) {
                 System.out.println("IOException from sendButtonNum() ssc");

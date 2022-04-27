@@ -20,7 +20,7 @@ public class Player extends JFrame {
     private JButton b7;
     private int playerId;
     private int otherPlayer;
-    private int[] values;
+    private ArrayList<String> values;
     private int maxTurns;
     private int turnsMade;
     private int myPoints;
@@ -37,14 +37,7 @@ public class Player extends JFrame {
         for (int i = 0; i < 7; ++i) {
             hand.add(new JButton(String.format("%d", i + 1)));
         }
-        b1 = new JButton("1");
-        b2 = new JButton("2");
-        b3 = new JButton("3");
-        b4 = new JButton("4");
-        b5 = new JButton("5");
-        b6 = new JButton("6");
-        b7 = new JButton("7");
-        values = new int[4];
+        values = new ArrayList<>();
         maxTurns = 0;
         turnsMade = 0;
         myPoints = 0;
@@ -64,13 +57,6 @@ public class Player extends JFrame {
         for (JButton jButton : hand) {
             contentPane.add(jButton);
         }
-        // contentPane.add(b1);
-        // contentPane.add(b2);
-        // contentPane.add(b3);
-        // contentPane.add(b4);
-        // contentPane.add(b5);
-        // contentPane.add(b6);
-        // contentPane.add(b7);
 
         if (playerId == 1) {
             message.setText("You are player #1. You go first.");
@@ -105,10 +91,10 @@ public class Player extends JFrame {
             buttonsEnabled = false;
             toggleButtons();
 
-            myPoints += values[bNum - 1];
-            System.out.println("My points: " + myPoints);
+            //myPoints += values.get(bNum - 1);
+            //System.out.println("My points: " + myPoints);
 
-            csc.sendButtonNum(bNum);
+            csc.sendCard("some card");
             if (playerId == 2 && turnsMade == maxTurns) {
                 checkWinner();
             } else {
@@ -120,25 +106,19 @@ public class Player extends JFrame {
         for (JButton jButton : hand) {
             jButton.addActionListener(al);
         }
-
-        // b1.addActionListener(al);
-        // b2.addActionListener(al);
-        // b3.addActionListener(al);
-        // b4.addActionListener(al);
     }
 
     public void toggleButtons() {
-        b1.setEnabled(buttonsEnabled);
-        b2.setEnabled(buttonsEnabled);
-        b3.setEnabled(buttonsEnabled);
-        b4.setEnabled(buttonsEnabled);
+        for (JButton jButton : hand) {
+            jButton.setEnabled(buttonsEnabled);
+        }
     }
 
     public void updateTurn() {
-        int n = csc.receiveButtonNum();
-        message.setText("Your enemy clicked button #" + n + ". Your turn.");
-        enemyPoints += values[n -1];
-        System.out.println("Your enemy has " + enemyPoints + " points.");
+        String s = csc.receiveCard();
+        message.setText("Your enemy played " + s + ". Your turn.");
+        //enemyPoints += values.get(n -1);
+        //System.out.println("Your enemy has " + enemyPoints + " points.");
         if (playerId == 1 && turnsMade == maxTurns) {
             checkWinner();
         } else {
@@ -174,39 +154,43 @@ public class Player extends JFrame {
                 dos = new DataOutputStream(s.getOutputStream());
                 playerId = dis.readInt();
                 System.out.println("Connected to server as Player #" + playerId + ".");
-                maxTurns = dis.readInt() / 2;
-                values[0] = dis.readInt();
-                values[1] = dis.readInt();
-                values[2] = dis.readInt();
-                values[3] = dis.readInt();
-                System.out.println("maxTurns: " + maxTurns);
-                System.out.println("Value #1 is " + values[0]);
-                System.out.println("Value #2 is " + values[1]);
-                System.out.println("Value #3 is " + values[2]);
-                System.out.println("Value #4 is " + values[3]);
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                values.add(dis.readUTF());
+                System.out.println("Value #1 is " + values.get(0));
+                System.out.println("Value #2 is " + values.get(1));
+                System.out.println("Value #3 is " + values.get(2));
+                System.out.println("Value #4 is " + values.get(3));
+                System.out.println("Value #5 is " + values.get(4));
+                System.out.println("Value #6 is " + values.get(5));
+                System.out.println("Value #7 is " + values.get(6));
             } catch (IOException ex) {
                 System.out.println("IOException from CSC constructor.");
             }
         }
 
-        public void sendButtonNum(int n) {
+        public void sendCard(String s) {
             try {
-                dos.writeInt(n);
+                dos.writeUTF(s);
                 dos.flush();
             } catch (IOException ex) {
                 System.out.println("IOException from sendButtonNum() CSC");
             }
         }
 
-        public int receiveButtonNum() {
-            int n = -1;
+        public String receiveCard() {
+            String s = "";
             try {
-                n = dis.readInt();
-                System.out.println("Player #" + otherPlayer + " clicked button #" + n);
+                s = dis.readUTF();
+                System.out.println("Player #" + otherPlayer + " played " + s);
             } catch (IOException ex) {
                 System.out.println("IOException from receiveButtonNum() csc");
             }
-            return n;
+            return s;
         }
 
         public void closeConnection() {
