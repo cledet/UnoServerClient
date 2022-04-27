@@ -9,9 +9,6 @@ public class GameServer {
     private int numPlayers;
     private ServerSideConnection player1;
     private ServerSideConnection player2;
-    private int turnsMade;
-    private int maxTurns;
-    private ArrayList<String> values;
     private String player1Card;
     private String player2Card;
     public static Stack<Card> deck = new Stack<>();
@@ -19,9 +16,6 @@ public class GameServer {
     public GameServer() {
         System.out.println("---- GAME SERVER ----");
         numPlayers = 0;
-        turnsMade = 0;
-        maxTurns = 60;
-        values = new ArrayList<>();
 
         initDeck();
 
@@ -29,6 +23,7 @@ public class GameServer {
             ss = new ServerSocket(5000);
         } catch (IOException ex) {
             System.out.println("IOException in GameServer constructor.");
+            System.out.println(ex.getMessage());
         }
     }
 
@@ -51,6 +46,7 @@ public class GameServer {
             initDeck();
         } catch (IOException ex) {
             System.out.println("IOException in acceptConnections()");
+            System.out.println(ex.getMessage());
         }
     }
 
@@ -68,7 +64,8 @@ public class GameServer {
                 dis = new DataInputStream(socket.getInputStream());
                 dos = new DataOutputStream(socket.getOutputStream());
             } catch (IOException ex) {
-                System.out.println("IOException from SSC constructor");
+                System.out.println("IOException from ServerSideConnection constructor");
+                System.out.println(ex.getMessage());
             }
         }
 
@@ -76,13 +73,9 @@ public class GameServer {
         public void run() {
             try {
                 dos.writeInt(playerId);
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
-                dos.writeUTF(deck.pop().print());
+                for (int i = 0; i < 7; ++i) {
+                    dos.writeUTF(deck.pop().print());
+                }
                 dos.flush();
 
                 while (true) {
@@ -110,16 +103,12 @@ public class GameServer {
                         System.out.println("Player 2 played " + player2Card);
                         player1.sendCard(player2Card);
                     }
-                    ++turnsMade;
-                    if (turnsMade == maxTurns) {
-                        System.out.println("Max turns has been reached.");
-                        break;
-                    }
                 }
                 player1.closeConnection();
                 player2.closeConnection();
             } catch (IOException | InterruptedException ex) {
-                System.out.println("IOException in SSC.run()");
+                System.out.println("IOException from run() in ServerSideConnection");
+                System.out.println(ex.getMessage());
             }
         }
 
@@ -128,7 +117,8 @@ public class GameServer {
                 dos.writeUTF(s);
                 dos.flush();
             } catch (IOException ex) {
-                System.out.println("IOException from sendButtonNum() ssc");
+                System.out.println("IOException from sendCard() in ServerSideConnection");
+                System.out.println(ex.getMessage());
             }
         }
 
@@ -137,7 +127,8 @@ public class GameServer {
                 socket.close();
                 System.out.println("---- CONNECTION CLOSED ----");
             } catch (IOException ex) {
-                System.out.println("IOException on closeConnection() ssc");
+                System.out.println("IOException from closeConnection() in ServerSideConnection");
+                System.out.println(ex.getMessage());
             }
         }
     }

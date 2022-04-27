@@ -15,11 +15,6 @@ public class Player extends JFrame {
     private ArrayList<Card> hand = new ArrayList<>();
     private int playerId;
     private int otherPlayer;
-    private ArrayList<String> values;
-    private int maxTurns;
-    private int turnsMade;
-    private int myPoints;
-    private int enemyPoints;
     private boolean buttonsEnabled;
 
     private ClientSideConnection csc;
@@ -32,11 +27,6 @@ public class Player extends JFrame {
         for (int i = 0; i < 8; ++i) {
             buttons.add(new JButton(String.format("%d", i + 1)));
         }
-        values = new ArrayList<>();
-        maxTurns = 0;
-        turnsMade = 0;
-        myPoints = 0;
-        enemyPoints = 0;
     }
 
     public void setupGUI() {
@@ -98,8 +88,6 @@ public class Player extends JFrame {
                 addActionListener();
             } else {
                 message.setText("You played " + cardString + ". Now wait for player #" + otherPlayer);
-                ++turnsMade;
-                System.out.println("Turns made: " + turnsMade);
 
                 buttonsEnabled = false;
                 toggleButtons();
@@ -153,7 +141,7 @@ public class Player extends JFrame {
             csc.closeConnection();
         }
         else {
-            message.setText("Your enemy played " + c.print() + ". Your turn.");
+            message.setText("Your opponent played " + c.print() + ". Your turn.");
             List<Card> playableCards = getPlayableCards(c);
             if (playableCards.size() == 0) {
                 buttons.get(0).setEnabled(true);
@@ -263,26 +251,16 @@ public class Player extends JFrame {
                 dos = new DataOutputStream(s.getOutputStream());
                 playerId = dis.readInt();
                 System.out.println("Connected to server as Player #" + playerId + ".");
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                hand.add(convertStringToCard(dis.readUTF()));
-                System.out.println("Value #1 is " + hand.get(0).print());
-                System.out.println("Value #2 is " + hand.get(1).print());
-                System.out.println("Value #3 is " + hand.get(2).print());
-                System.out.println("Value #4 is " + hand.get(3).print());
-                System.out.println("Value #5 is " + hand.get(4).print());
-                System.out.println("Value #6 is " + hand.get(5).print());
-                System.out.println("Value #7 is " + hand.get(6).print());
+                for (int i = 0; i < 7; ++i) {
+                    hand.add(convertStringToCard(dis.readUTF()));
+                }
                 buttons.set(0, new JButton("DRAW"));
                 for (int i = 0; i < 7; ++i) {
                     buttons.set(i + 1, new JButton(hand.get(i).print()));
                 }
             } catch (IOException ex) {
-                System.out.println("IOException from CSC constructor.");
+                System.out.println("IOException from ClientSideConnection constructor.");
+                System.out.println(ex.getMessage());
             }
         }
 
@@ -291,7 +269,8 @@ public class Player extends JFrame {
                 dos.writeUTF(s);
                 dos.flush();
             } catch (IOException ex) {
-                System.out.println("IOException from sendButtonNum() CSC");
+                System.out.println("IOException from sendCard() in ClientSideConnection");
+                System.out.println(ex.getMessage());
             }
         }
 
@@ -302,7 +281,8 @@ public class Player extends JFrame {
                 c = convertStringToCard(cardString);
                 System.out.println("Player #" + otherPlayer + " played " + c.print());
             } catch (IOException ex) {
-                System.out.println("IOException from receiveButtonNum() csc");
+                System.out.println("IOException from receiveCard() in ClientSideConnection");
+                System.out.println(ex.getMessage());
             }
             receivedCard = c;
             return c;
@@ -313,7 +293,8 @@ public class Player extends JFrame {
                 s.close();
                 System.out.println("---- CONNECTION CLOSED ----");
             } catch (IOException ex) {
-                System.out.println("IOException on closeConnection() csc");
+                System.out.println("IOException on closeConnection() in ClientSideConnection");
+                System.out.println(ex.getMessage());
             }
         }
     }
